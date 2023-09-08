@@ -28,6 +28,11 @@
   align-items: center;
 }
 
+.spaceflex {
+  justify-content: space-around;
+  align-items: space-around;
+}
+
 .vertical {
   flex-direction: column;
 }
@@ -38,7 +43,7 @@
 
 .frame {
   flex: 2;
-  background-color: #141F19;
+  background-color: teal;
 }
 
 .padding {
@@ -67,7 +72,7 @@
 
 .panel {
   height: 100%;
-  background-color: #F9F5F0;
+  background-color: ivory;
 }
 
 .left {
@@ -82,8 +87,8 @@
   color: white;
   font-size: x-large;
   font-weight: 400;
-  margin-bottom: 0.5%;
-  margin-left: 1%;
+  margin-bottom: 0.25%;
+  margin-left: 0.5%;
 }
 
 .spacely {
@@ -102,7 +107,7 @@
 .layer {
   padding: 4%;
   margin-top: 5%;
-  background-color: #141F19;
+  background-color: teal;
   border-radius: 1vh;
 }
 
@@ -114,7 +119,7 @@ button {
   height: 100%;
   border-radius: 100vh;
   width: 100%;
-  background-color: #1C2D24;
+  background-color: teal;
   text-align: center;
   color: white;
   font-size: medium;
@@ -122,20 +127,20 @@ button {
 }
 
 button:hover {
-  background-color: #384E40;
+  background-color: darkcyan;
 }
 
 button:disabled {
   background-color: transparent;
-  color: #141F19;
-  border: 1px solid #141F19;
+  color: black;
+  border: 1px solid teal;
 }
 
 input[type=file]::file-selector-button {
   height: 100%;
   border-radius: 100vh;
   width: 50%;
-  background-color: #1C2D24;
+  background-color: teal;
   text-align: center;
   color: white;
   font-size: medium;
@@ -143,7 +148,7 @@ input[type=file]::file-selector-button {
 }
 
 input[type=file]::file-selector-button:hover {
-  background-color: #384E40;
+  background-color: teal;
 }
 
 input[type=checkbox]{

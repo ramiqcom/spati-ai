@@ -16,10 +16,9 @@ export default function Home() {
 // Header
 function Header(){
   return (
-    <div className='flexible column frame center padding center3 center2'>
-      <div className='title'>
-        SPATI.AI
-      </div>
+    <div className='flexible column frame padding center center2 center3'>
+      <div className='title'> SPATI.AI </div>
+      <div className='title'> Blue Carbon Calculator </div>
     </div>
   )
 }
