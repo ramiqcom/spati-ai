@@ -3,11 +3,22 @@
 // Import packages
 import { useState } from "react";
 import { seagrassPalette, seagrassLabel } from "./seagrass";
+import Image from 'next/image';
+import logo from '../../../public/logo.png';
 
 // Left panel
 export default function Left(){
 	return (
 		<div className='left panel flexible vertical padding smallspace'>
+
+			<div className="flexible padding smallspace center2" style={{ marginTop: '10%' }}>
+				<Image 
+					src={logo}
+					alt="SPATI.AI" 
+					height={100} 
+				/>
+			</div>
+
 			<Seagrass />
 		</div>
 	)

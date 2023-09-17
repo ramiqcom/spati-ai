@@ -73,7 +73,7 @@ function ShowImage(props){
 				const layer = new GeoRasterLayer({
           georaster: data,
           opacity: 1,
-          resolution: 256
+          resolution: 1024
 				}).addTo(Map);
 				
 				// Zoom to image
