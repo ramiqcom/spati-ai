@@ -1,7 +1,7 @@
 'use client'
 
 // Import geojson
-import { setGeojson, setDisabledCalculate } from './right';
+import { /*setGeojson,*/ setDisabledCalculate } from './right';
 
 // Map state
 export let Map;
@@ -10,8 +10,8 @@ export let Features;
 // ** Global Variables ** //
 
 export default async function initMap(id){
-	// Geoman
-	require('@geoman-io/leaflet-geoman-free');
+	// Added additional packages
+	// require('@geoman-io/leaflet-geoman-free');
 
 	// Assign map
 	Map = L.map(id, 
@@ -27,8 +27,9 @@ export default async function initMap(id){
 	}).addTo(Map);
 
 	// Features
-	Features = L.geoJSON([]).addTo(Map);
+	// Features = L.geoJSON([]).addTo(Map);
 
+	/*
 	// Add drawing control
 	Map.pm.addControls({
 		drawCircleMarker: false,
@@ -40,8 +41,8 @@ export default async function initMap(id){
 	// Add created geometry to layer group
 	Map.on('pm:create', e => {
 		Features.addLayer(e.layer);
-		setGeojson(Features.toGeoJSON());
+		//setGeojson(Features.toGeoJSON());
 		setDisabledCalculate(false);
 	});
+	*/
 }
-

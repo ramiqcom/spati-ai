@@ -7,10 +7,11 @@ import { Map, Features } from './map';
 import shp from 'shpjs';
 import { kml } from '@tmcw/togeojson';
 import { simplify, area, toWgs84 } from '@turf/turf';
+import parseGeoraster from 'georaster';
 
 // Main geojson
-let geojson = null;
-export let setGeojson;
+// let geojson = null;
+// export let setGeojson;
 
 // Calculate button
 let disabledCalculate;
@@ -19,16 +20,75 @@ export let setDisabledCalculate;
 // Right
 export default function Right(){
 	[ disabledCalculate, setDisabledCalculate ] = useState(true);
-	[ geojson, setGeojson ] = useState(null);
+	// [ geojson, setGeojson ] = useState(null);
 
 	return (
 		<div className='right panel flexible vertical padding bigspace'>
-			<AOI setDisabledCalculate={ setDisabledCalculate } />
+			{
+				//<AOI setDisabledCalculate={ setDisabledCalculate } />
+			}
+			<UploadTiff style={{ marginTop: '5%' }} setDisabledCalculate={setDisabledCalculate}/>
 			<Calculate disabled={ disabledCalculate } />
 		</div>
 	)
 }
 
+// Upload GeoTIFF
+function UploadTiff(props){
+	const [ file, setFile ] = useState(null);
+	const [ disabledShow, setDisabledShow ] = useState(true);
+
+	return (
+		<div style={ props.style } className='flexible vertical bigspace'>
+
+			<div>
+				Please upload a visualized RGB GeoTIFF image
+			</div>
+
+			<input type="file" accept={'.tiff,.tif'} onChange={ (e) => {
+				setFile(e.target.files[0]);
+				setDisabledShow(false);
+			} } />
+
+			<ShowImage image={ file } disabled={ disabledShow } setDisabledCalculate={setDisabledCalculate}/>
+		</div>
+	)
+}
+
+// Show image button
+function ShowImage(props){
+	const image = props.image;
+
+	return (
+		<div>
+			<button disabled={ props.disabled } onClick={async () => {
+				// Parse GeoTIFF
+				const data = await parseGeoraster(image);
+
+				// Load GeoRasterLayer
+				let GeoRasterLayer = await import('georaster-layer-for-leaflet');
+				GeoRasterLayer = GeoRasterLayer.default;
+
+				// TIFF layer
+				const layer = new GeoRasterLayer({
+          georaster: data,
+          opacity: 1,
+          resolution: 256
+				}).addTo(Map);
+				
+				// Zoom to image
+				Map.fitBounds(layer.extent.leafletBounds);
+
+				// Set calculate button to enable
+				props.setDisabledCalculate(false)
+			}}>
+				Show image to map
+			</button>
+		</div>
+	)
+}
+
+/*
 // AOI section 
 function AOI(props){
 	// AOI state
@@ -103,11 +163,16 @@ function Upload(props){
 				setDisabledShow(false);
 			} } />
 
-			<ShowGeometry disabled={ disabledShow } file={ file } format={ props.option } setDisabledCalculate={ props.setDisabledCalculate } />
+			{
+				//<ShowGeometry disabled={ disabledShow } file={ file } format={ props.option } setDisabledCalculate={ props.setDisabledCalculate } />
+			}
+
 		</div>
 	)
 }
+*/
 
+/*
 // Button to show the uploaded geometry to map
 function ShowGeometry(props){
 	const converterFunction = {
@@ -152,11 +217,12 @@ function ShowGeometry(props){
 		</div>
 	)
 }
+*/
 
 // Calculate carbon
 function Calculate(props){
 	return (
-		<div className='flexible vertical spacely'>
+		<div className='flexible vertical spacely' style={props.style}>
 			<button className='greenbutton' disabled={props.disabled} onClick={ async () => {
 			}}>
 				Calculate
@@ -197,7 +263,7 @@ async function geojsonParse(file){
 
 // Function to clear data
 function clear(setDisabledCalculate){
-	setGeojson(null);
+	// setGeojson(null);
 	Features.clearLayers();
 	setDisabledCalculate(true);
 }

@@ -43,7 +43,7 @@
 
 .frame {
   flex: 2;
-  background-color: teal;
+  background-color: #215478;
 }
 
 .padding {
@@ -97,7 +97,7 @@
 }
 
 .bigspace {
-  gap: 15px;
+  gap: 30px;
 }
 
 .smallspace {
@@ -107,7 +107,7 @@
 .layer {
   padding: 4%;
   margin-top: 5%;
-  background-color: teal;
+  background-color: #215478;
   border-radius: 1vh;
 }
 
@@ -119,7 +119,7 @@ button {
   height: 100%;
   border-radius: 100vh;
   width: 100%;
-  background-color: teal;
+  background-color: #215478;
   text-align: center;
   color: white;
   font-size: medium;
@@ -127,20 +127,20 @@ button {
 }
 
 button:hover {
-  background-color: darkcyan;
+  background-color: #267565;
 }
 
 button:disabled {
   background-color: transparent;
   color: black;
-  border: 1px solid teal;
+  border: 1px solid #215478;
 }
 
 input[type=file]::file-selector-button {
   height: 100%;
   border-radius: 100vh;
   width: 50%;
-  background-color: teal;
+  background-color: #215478;
   text-align: center;
   color: white;
   font-size: medium;
@@ -148,7 +148,7 @@ input[type=file]::file-selector-button {
 }
 
 input[type=file]::file-selector-button:hover {
-  background-color: teal;
+  background-color: #267565;
 }
 
 input[type=checkbox]{
