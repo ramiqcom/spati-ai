@@ -11,6 +11,8 @@
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.14.2",
     "@google/earthengine": "^0.1.368",
+    "@tensorflow/tfjs": "^4.11.0",
+    "@tensorflow/tfjs-backend-webgpu": "^4.11.0",
     "@tmcw/togeojson": "^5.8.1",
     "@turf/turf": "^6.5.0",
     "eslint": "8.48.0",
@@ -27,5 +29,8 @@
     "react-dom": "18.2.0",
     "react-select": "^5.7.4",
     "shpjs": "^4.0.4"
+  },
+  "devDependencies": {
+    "encoding": "^0.1.13"
   }
 }

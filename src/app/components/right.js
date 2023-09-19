@@ -8,6 +8,8 @@ import shp from 'shpjs';
 import { kml } from '@tmcw/togeojson';
 import { simplify, area, toWgs84 } from '@turf/turf';
 import parseGeoraster from 'georaster';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-webgpu';
 
 // Main geojson
 // let geojson = null;
@@ -37,6 +39,8 @@ export default function Right(){
 function UploadTiff(props){
 	const [ file, setFile ] = useState(null);
 	const [ disabledShow, setDisabledShow ] = useState(true);
+	const [ disabledClassify, setDisabledClassify ] = useState(true);
+	const [ image, setImage ] = useState(null);
 
 	return (
 		<div style={ props.style } className='flexible vertical bigspace'>
@@ -50,20 +54,20 @@ function UploadTiff(props){
 				setDisabledShow(false);
 			} } />
 
-			<ShowImage image={ file } disabled={ disabledShow } setDisabledCalculate={setDisabledCalculate}/>
+			<ShowImage file={ file } disabled={ disabledShow } setDisabledClassify={ setDisabledClassify } setImage={setImage} />
+			<Classify disabled={ disabledClassify } image={image} />
 		</div>
 	)
 }
 
 // Show image button
 function ShowImage(props){
-	const image = props.image;
-
 	return (
 		<div>
 			<button disabled={ props.disabled } onClick={async () => {
 				// Parse GeoTIFF
-				const data = await parseGeoraster(image);
+				const data = await parseGeoraster(props.file);
+				props.setImage(data);
 
 				// Load GeoRasterLayer
 				let GeoRasterLayer = await import('georaster-layer-for-leaflet');
@@ -79,10 +83,63 @@ function ShowImage(props){
 				// Zoom to image
 				Map.fitBounds(layer.extent.leafletBounds);
 
-				// Set calculate button to enable
-				props.setDisabledCalculate(false)
+				// Enable classify button
+				props.setDisabledClassify(false);
 			}}>
 				Show image to map
+			</button>
+		</div>
+	)
+}
+
+// Button to classify image
+function Classify(props){
+	return (
+		<div>
+			<button disabled={ props.disabled } onClick={async () => {
+				// Get image information
+				const image = props.image;
+				const { noDataValue, pixelHeight, pixelWidth, projection, xmin, xmax, ymax, ymin, values } = await image;
+				console.log(image);
+
+				// Set process to webgpu
+				await tf.setBackend('webgpu');
+				
+				// Preprocess tensor for prediction
+				let tensor = tf.tensor(values).transpose();
+				const shape = tensor.shape;
+				tensor = tensor.reshape([1, shape[0], shape[1], shape[2]]);	
+
+				// Load model
+				const model = await tf.loadLayersModel('model/model_final/Seagrass_UNET_1695018449/model.json');
+
+				// Predict!
+				let prediction = model.predict(tensor);
+				prediction = tf.argMax(prediction, 3);
+				const predictShape = prediction.shape;
+				prediction = prediction.reshape([predictShape[1], predictShape[2]]);
+				prediction = await prediction.array();
+
+				// Create an image
+				const seagrass = await parseGeoraster([prediction], { noDataValue, pixelHeight, pixelWidth, projection, xmin, xmax, ymax, ymin });
+
+				// Load GeoRasterLayer
+				let GeoRasterLayer = await import('georaster-layer-for-leaflet');
+				GeoRasterLayer = GeoRasterLayer.default;
+
+				// TIFF layer
+				const seagrassPalette = [ 'lightskyblue', 'lightgreen', 'limegreen', 'darkgreen' ]
+				const layer = new GeoRasterLayer({
+          georaster: seagrass,
+          opacity: 1,
+          resolution: 1024,
+					pixelValuesToColorFn: value => seagrassPalette[value]
+				}).addTo(Map);
+				
+				// Zoom to image
+				Map.fitBounds(layer.extent.leafletBounds);
+			}}>
+				Classify Image
 			</button>
 		</div>
 	)
