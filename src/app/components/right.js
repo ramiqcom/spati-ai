@@ -314,13 +314,23 @@ function Calculate(props){
 	return (
 		<div className='flexible vertical spacely' style={ props.style }>
 			<button className='greenbutton' disabled={ props.disabled } onClick={ async () => {
+				// Image
 				const image = props.image;
-				const tensor = props.tensor;
+				
+				// Tensor
+				let tensor = props.dataTensor;
+				const shape = tensor.shape;
+				const counts = shape.reduce((x, y) => x * y);
+				tensor = tensor.reshape([counts]);
+
+				// Data setter
 				const { setArea, setNonSeagrass, setLowSeagrass, setMediumSeagrass, setHighSeagrass } = props.dataSet;
 
 				// Calculate area
 				const bbox = bboxPolygon([image.xmin, image.ymin, image.xmax, image.ymax]);
-				setArea(() => Math.round(area(bbox) / 1e4));
+				const areaBbox = area(bbox);
+				setArea(() => Math.round(areaBbox / 1e4));
+				const areaPerElement = areaBbox / counts;
 			}}>
 				Calculate Carbon
 			</button>
