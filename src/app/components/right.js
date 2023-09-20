@@ -137,7 +137,7 @@ function Classify(props){
 				tensor = tensor.reshape([1, shape[0], shape[1], shape[2]]);
 
 				// Load model
-				const model = await tf.loadLayersModel('model/model_final/Seagrass_1695206713/model.json');
+				const model = await tf.loadLayersModel('model/model_final/Seagrass_1695248109/model.json');
 
 				// Predict!
 				let prediction = model.predict(tensor); // Predict the image
