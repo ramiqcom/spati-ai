@@ -6,41 +6,53 @@ import { useState } from 'react';
 import { Map, Features } from './map';
 import shp from 'shpjs';
 import { kml } from '@tmcw/togeojson';
-import { simplify, area, toWgs84 } from '@turf/turf';
+import { simplify, area, toWgs84, bboxPolygon } from '@turf/turf';
 import parseGeoraster from 'georaster';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgpu';
+import { setSeagrassDisabled, setSeagrassLayer, setImageDisabled, setImageLayer, seagrassLayer, imageLayer } from './left';
+import Table from './table';
 
 // Main geojson
 // let geojson = null;
 // export let setGeojson;
 
-// Calculate button
-let disabledCalculate;
-export let setDisabledCalculate;
-
 // Right
 export default function Right(){
-	[ disabledCalculate, setDisabledCalculate ] = useState(true);
+	const [ file, setFile ] = useState(null);
+	const [ image, setImage ] = useState(null);
+	const [ dataTensor, setDataTensor ] = useState(null);
+	const [ disabledClassify, setDisabledClassify ] = useState(true);
+	const [ disabledCalculate, setDisabledCalculate ] = useState(true);
+	const [ disabledDownload, setDisabledDownload ] = useState(true);
+	const [ downloadLink, setDownloadLink ] = useState(null);
 	// [ geojson, setGeojson ] = useState(null);
+
+	// Datatable variable
+	const [ area, setArea ] = useState(null);
+	const [ nonSeagrass, setNonSeagrass ] = useState(null);
+	const [ lowSeagrass, setLowSeagrass ] = useState(null);
+	const [ mediumSeagrass, setMediumSeagrass ] = useState(null);
+	const [ highSeagrass, setHighSeagrass ] = useState(null);
+	const dataTable = { area, nonSeagrass, lowSeagrass, mediumSeagrass, highSeagrass };
+	const dataSet = { setArea, setNonSeagrass, setLowSeagrass, setMediumSeagrass, setHighSeagrass };
 
 	return (
 		<div className='right panel flexible vertical padding bigspace'>
 			{
 				//<AOI setDisabledCalculate={ setDisabledCalculate } />
 			}
-			<UploadTiff style={{ marginTop: '5%' }} setDisabledCalculate={setDisabledCalculate}/>
-			<Calculate disabled={ disabledCalculate } />
+			<UploadTiff style={{ marginTop: '5%' }} setDisabledClassify={ setDisabledClassify } setDisabledCalculate={ setDisabledCalculate } setFile={ setFile } file={ file } setImage={ setImage } />
+			<Classify disabled={ disabledClassify } image={ image } setDisabledCalculate={ setDisabledCalculate } setDataTensor={ setDataTensor } />
+			<Calculate disabled={ disabledCalculate } dataSet={ dataSet } dataTensor={ dataTensor } image={ image } />
+			<Table disabled={ disabledDownload } link={ downloadLink } dataTable={ dataTable } />
 		</div>
 	)
 }
 
 // Upload GeoTIFF
 function UploadTiff(props){
-	const [ file, setFile ] = useState(null);
 	const [ disabledShow, setDisabledShow ] = useState(true);
-	const [ disabledClassify, setDisabledClassify ] = useState(true);
-	const [ image, setImage ] = useState(null);
 
 	return (
 		<div style={ props.style } className='flexible vertical bigspace'>
@@ -50,12 +62,18 @@ function UploadTiff(props){
 			</div>
 
 			<input type="file" accept={'.tiff,.tif'} onChange={ (e) => {
-				setFile(e.target.files[0]);
+				props.setFile(e.target.files[0]);
 				setDisabledShow(false);
 			} } />
 
-			<ShowImage file={ file } disabled={ disabledShow } setDisabledClassify={ setDisabledClassify } setImage={setImage} />
-			<Classify disabled={ disabledClassify } image={image} />
+			<ShowImage 
+				file={ props.file }
+				disabled={ disabledShow } 
+				setDisabledClassify={ props.setDisabledClassify }
+				setDisabledCalculate={ props.setDisabledCalculate }
+				setImage={ props.setImage }
+			/>
+
 		</div>
 	)
 }
@@ -65,6 +83,9 @@ function ShowImage(props){
 	return (
 		<div>
 			<button disabled={ props.disabled } onClick={async () => {
+				// Disable button
+				disableButton(props.setDisabledCalculate, props.setDisabledClassify);
+
 				// Parse GeoTIFF
 				const data = await parseGeoraster(props.file);
 				props.setImage(data);
@@ -85,6 +106,12 @@ function ShowImage(props){
 
 				// Enable classify button
 				props.setDisabledClassify(false);
+
+				// Set image layer panel
+				setImageDisabled(false)
+
+				// Set image layer bind
+				setImageLayer(layer);
 			}}>
 				Show image to map
 			</button>
@@ -118,6 +145,7 @@ function Classify(props){
 				const predictionShape = prediction.shape // Prediction array reshaping
 				prediction = prediction.reshape([predictionShape[1], predictionShape[2]]) // Reshape the image
 				prediction = prediction.reverse(1).transpose().reverse(0); // Correcting the image orientation
+				props.setDataTensor(prediction); // Set data tensor for further calculation
 				prediction = await prediction.array(); // Get the array from the tensor
 
 				// Create an image
@@ -134,6 +162,15 @@ function Classify(props){
 				
 				// Zoom to image
 				Map.fitBounds(layer.extent.leafletBounds);
+
+				// Enabled seagrass layer
+				setSeagrassDisabled(false);
+
+				// Set seagrass layer bind
+				setSeagrassLayer(layer);
+
+				// Set calculate button to enable
+				props.setDisabledCalculate(false);
 			}}>
 				Classify Image
 			</button>
@@ -275,10 +312,17 @@ function ShowGeometry(props){
 // Calculate carbon
 function Calculate(props){
 	return (
-		<div className='flexible vertical spacely' style={props.style}>
-			<button className='greenbutton' disabled={props.disabled} onClick={ async () => {
+		<div className='flexible vertical spacely' style={ props.style }>
+			<button className='greenbutton' disabled={ props.disabled } onClick={ async () => {
+				const image = props.image;
+				const tensor = props.tensor;
+				const { setArea, setNonSeagrass, setLowSeagrass, setMediumSeagrass, setHighSeagrass } = props.dataSet;
+
+				// Calculate area
+				const bbox = bboxPolygon([image.xmin, image.ymin, image.xmax, image.ymax]);
+				setArea(() => Math.round(area(bbox) / 1e4));
 			}}>
-				Calculate
+				Calculate Carbon
 			</button>
 		</div>
 	)
@@ -333,4 +377,22 @@ function csv(data, columns){
 	const string = data.map(row => row.join(',')).join('\n');
 	const url =  encodeURI('data:text/csv;charset=utf-8,' + string);
 	return url;
+}
+
+/**
+ * Disable many button
+ */
+function disableButton(...args){
+	// Nonactive feature
+	args.map(fun => fun(true));
+
+	// Set layer binding to disabled
+	setSeagrassDisabled(true);
+	setSeagrassLayer(null);
+	setImageDisabled(true);
+	setImageLayer(null);
+
+	// Remove layer if change image
+	seagrassLayer ? Map.removeLayer(seagrassLayer) : null;
+	imageLayer ? Map.removeLayer(imageLayer) : null; 
 }

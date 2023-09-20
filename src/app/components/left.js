@@ -6,6 +6,22 @@ import { seagrassPalette, seagrassLabel } from "./seagrass";
 import Image from 'next/image';
 import logo from '../../../public/logo.png';
 
+// State disable check seagrass layer
+let imageDisabled;
+export let setImageDisabled;
+
+// State seagrass layer
+export let imageLayer;
+export let setImageLayer;
+
+// State disable check seagrass layer
+let seagrassDisabled;
+export let setSeagrassDisabled;
+
+// State seagrass layer
+export let seagrassLayer;
+export let setSeagrassLayer;
+
 // Left panel
 export default function Left(){
 	return (
@@ -19,7 +35,25 @@ export default function Left(){
 				/>
 			</div>
 
+			<ImageLayer />
 			<Seagrass />
+		</div>
+	)
+}
+
+// Image ayer
+function ImageLayer(){
+	const [ check, setCheck ] = useState(true);
+	[ imageDisabled, setImageDisabled ] = useState(true);
+	[ imageLayer, setImageLayer ] = useState(null); 
+
+	return (
+		<div className="flexible layer horizontal smallspace" style={{ color: 'white' }}>
+			<input type="checkbox" checked={check} disabled={imageDisabled} onChange={e => {
+					const status = e.target.checked;
+					setCheck(status);
+					status ? imageLayer.setOpacity(1) : imageLayer.setOpacity(0);
+				}}/>Image
 		</div>
 	)
 }
@@ -27,12 +61,16 @@ export default function Left(){
 // Seagrass data
 function Seagrass(){
 	const [ check, setCheck ] = useState(true);
+	[ seagrassDisabled, setSeagrassDisabled ] = useState(true);
+	[ seagrassLayer, setSeagrassLayer ] = useState(null); 
 
 	return (
 		<div className="flexible layer vertical smallspace">
 			<div style={{ color: 'white' }}>
-				<input type="checkbox" checked={check} onChange={e => {
-					setCheck(e.target.checked);
+				<input type="checkbox" checked={check} disabled={seagrassDisabled} onChange={e => {
+					const status = e.target.checked;
+					setCheck(status);
+					status ? seagrassLayer.setOpacity(1) : seagrassLayer.setOpacity(0);
 				}}/>Seagrass
 			</div>
 
