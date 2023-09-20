@@ -108,20 +108,17 @@ function Classify(props){
 				let tensor = tf.tensor(values).div(255).transpose();
 				const shape = tensor.shape;
 				tensor = tensor.reshape([1, shape[0], shape[1], shape[2]]);
-				console.log(tensor);
 
 				// Load model
 				const model = await tf.loadLayersModel('model/model_final/Seagrass_1695206713/model.json');
 
 				// Predict!
-				let prediction = model.predict(tensor);
-				console.log(prediction)
-				prediction = tf.argMax(prediction, 3)
-				const predictionShape = prediction.shape
-				prediction = prediction.reshape([predictionShape[1], predictionShape[2]])
-				prediction = returnImageNormal(prediction);
-				prediction = await prediction.array();
-				console.log(prediction);
+				let prediction = model.predict(tensor); // Predict the image
+				prediction = tf.argMax(prediction, 3) // Get the highest value
+				const predictionShape = prediction.shape // Prediction array reshaping
+				prediction = prediction.reshape([predictionShape[1], predictionShape[2]]) // Reshape the image
+				prediction = prediction.reverse(1).transpose().reverse(0); // Correcting the image orientation
+				prediction = await prediction.array(); // Get the array from the tensor
 
 				// Create an image
 				const seagrass = await parseGeoraster([prediction], { noDataValue, pixelHeight, pixelWidth, projection, xmin, xmax, ymax, ymin });
@@ -336,12 +333,4 @@ function csv(data, columns){
 	const string = data.map(row => row.join(',')).join('\n');
 	const url =  encodeURI('data:text/csv;charset=utf-8,' + string);
 	return url;
-}
-
-// Return
-function returnImageNormal(tensor) {
-	tensor = tensor.reverse(1)
-	tensor = tensor.transpose()
-	tensor = tensor.reverse(0)
-	return tensor;
 }
