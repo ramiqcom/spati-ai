@@ -100,32 +100,31 @@ function Classify(props){
 				// Get image information
 				const image = props.image;
 				const { noDataValue, pixelHeight, pixelWidth, projection, xmin, xmax, ymax, ymin, values } = await image;
-				console.log(image);
 
 				// Set process to webgpu
 				await tf.setBackend('webgpu');
 				
 				// Preprocess tensor for prediction
-				let tensor = tf.tensor(values).transpose();
+				let tensor = tf.tensor(values).div(255).transpose();
 				const shape = tensor.shape;
-				tensor = tensor.reshape([1, shape[0], shape[1], shape[2]]);	
+				tensor = tensor.reshape([1, shape[0], shape[1], shape[2]]);
+				console.log(tensor);
 
 				// Load model
-				const model = await tf.loadLayersModel('model/model_final/Seagrass_UNET_1695018449/model.json');
+				const model = await tf.loadLayersModel('model/model_final/Seagrass_1695206713/model.json');
 
 				// Predict!
 				let prediction = model.predict(tensor);
-				prediction = tf.argMax(prediction, 3);
-				const predictShape = prediction.shape;
-				prediction = prediction.reshape([predictShape[1], predictShape[2]]);
+				console.log(prediction)
+				prediction = tf.argMax(prediction, 3)
+				const predictionShape = prediction.shape
+				prediction = prediction.reshape([predictionShape[1], predictionShape[2]])
+				prediction = returnImageNormal(prediction);
 				prediction = await prediction.array();
+				console.log(prediction);
 
 				// Create an image
 				const seagrass = await parseGeoraster([prediction], { noDataValue, pixelHeight, pixelWidth, projection, xmin, xmax, ymax, ymin });
-
-				// Load GeoRasterLayer
-				let GeoRasterLayer = await import('georaster-layer-for-leaflet');
-				GeoRasterLayer = GeoRasterLayer.default;
 
 				// TIFF layer
 				const seagrassPalette = [ 'lightskyblue', 'lightgreen', 'limegreen', 'darkgreen' ]
@@ -337,4 +336,12 @@ function csv(data, columns){
 	const string = data.map(row => row.join(',')).join('\n');
 	const url =  encodeURI('data:text/csv;charset=utf-8,' + string);
 	return url;
+}
+
+// Return
+function returnImageNormal(tensor) {
+	tensor = tensor.reverse(1)
+	tensor = tensor.transpose()
+	tensor = tensor.reverse(0)
+	return tensor;
 }
