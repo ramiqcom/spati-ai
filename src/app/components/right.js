@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Map, Features } from './map';
 import shp from 'shpjs';
 import { kml } from '@tmcw/togeojson';
-import { simplify, area, toWgs84, bboxPolygon } from '@turf/turf';
+import { simplify, area, toWgs84 } from '@turf/turf';
 import parseGeoraster from 'georaster';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgpu';
@@ -21,6 +21,7 @@ import Table from './table';
 export default function Right(){
 	const [ file, setFile ] = useState(null);
 	const [ image, setImage ] = useState(null);
+	const [ bounds, setBounds ] = useState(null);
 	const [ dataTensor, setDataTensor ] = useState(null);
 	const [ disabledClassify, setDisabledClassify ] = useState(true);
 	const [ disabledCalculate, setDisabledCalculate ] = useState(true);
@@ -43,8 +44,8 @@ export default function Right(){
 				//<AOI setDisabledCalculate={ setDisabledCalculate } />
 			}
 			<UploadTiff style={{ marginTop: '5%' }} setDisabledClassify={ setDisabledClassify } setDisabledCalculate={ setDisabledCalculate } setFile={ setFile } file={ file } setImage={ setImage } />
-			<Classify disabled={ disabledClassify } image={ image } setDisabledCalculate={ setDisabledCalculate } setDataTensor={ setDataTensor } />
-			<Calculate disabled={ disabledCalculate } dataSet={ dataSet } dataTensor={ dataTensor } image={ image } />
+			<Classify disabled={ disabledClassify } setDisabledClassify={ setDisabledClassify } image={ image } setDisabledCalculate={ setDisabledCalculate } setDataTensor={ setDataTensor } setBounds={ setBounds } />
+			<Calculate disabled={ disabledCalculate } setDisabledCalculate={ setDisabledCalculate } dataSet={ dataSet } dataTensor={ dataTensor } image={ image } bounds={ bounds } />
 			<Table disabled={ disabledDownload } link={ downloadLink } dataTable={ dataTable } />
 		</div>
 	)
@@ -72,6 +73,7 @@ function UploadTiff(props){
 				setDisabledClassify={ props.setDisabledClassify }
 				setDisabledCalculate={ props.setDisabledCalculate }
 				setImage={ props.setImage }
+				setDisabledShow={ setDisabledShow }
 			/>
 
 		</div>
@@ -80,9 +82,14 @@ function UploadTiff(props){
 
 // Show image button
 function ShowImage(props){
+	const [ buttonLabel, setButtonLabel ] = useState('Show image to map');
 	return (
 		<div>
 			<button disabled={ props.disabled } onClick={async () => {
+				// Disable this button and set loading
+				props.setDisabledShow(true);
+				setButtonLabel('Loading...');
+
 				// Disable button
 				disableButton(props.setDisabledCalculate, props.setDisabledClassify);
 
@@ -112,8 +119,12 @@ function ShowImage(props){
 
 				// Set image layer bind
 				setImageLayer(layer);
+
+				// Enable this button and set loading to false
+				props.setDisabledShow(false);
+				setButtonLabel('Show image to map');
 			}}>
-				Show image to map
+				{ buttonLabel }
 			</button>
 		</div>
 	)
@@ -121,9 +132,15 @@ function ShowImage(props){
 
 // Button to classify image
 function Classify(props){
+	const [ buttonLabel, setButtonLabel ] = useState('Classify image');
+
 	return (
 		<div>
 			<button disabled={ props.disabled } onClick={async () => {
+				// Disable classify and set loading
+				props.setDisabledClassify(true);
+				setButtonLabel('Loading...');
+
 				// Get image information
 				const image = props.image;
 				const { noDataValue, pixelHeight, pixelWidth, projection, xmin, xmax, ymax, ymin, values } = await image;
@@ -161,7 +178,9 @@ function Classify(props){
 				}).addTo(Map);
 				
 				// Zoom to image
-				Map.fitBounds(layer.extent.leafletBounds);
+				const bounds = layer.extent.leafletBounds
+				Map.fitBounds(bounds);
+				props.setBounds(bounds);
 
 				// Enabled seagrass layer
 				setSeagrassDisabled(false);
@@ -171,8 +190,12 @@ function Classify(props){
 
 				// Set calculate button to enable
 				props.setDisabledCalculate(false);
+
+				// Enable classify and set loading to false
+				props.setDisabledClassify(false);
+				setButtonLabel('Classify image');
 			}}>
-				Classify Image
+				{ buttonLabel }
 			</button>
 		</div>
 	)
@@ -311,28 +334,47 @@ function ShowGeometry(props){
 
 // Calculate carbon
 function Calculate(props){
+	const [ buttonLabel, setButtonLabel ] = useState('Calculate carbon');
+
 	return (
 		<div className='flexible vertical spacely' style={ props.style }>
 			<button className='greenbutton' disabled={ props.disabled } onClick={ async () => {
+				// Disable classify and set loading
+				props.setDisabledCalculate(true);
+				setButtonLabel('Loading...');
+
 				// Image
 				const image = props.image;
 				
 				// Tensor
 				let tensor = props.dataTensor;
-				const shape = tensor.shape;
+				let shape = tensor.shape;
 				const counts = shape.reduce((x, y) => x * y);
-				tensor = tensor.reshape([counts]);
 
 				// Data setter
 				const { setArea, setNonSeagrass, setLowSeagrass, setMediumSeagrass, setHighSeagrass } = props.dataSet;
 
 				// Calculate area
-				const bbox = bboxPolygon([image.xmin, image.ymin, image.xmax, image.ymax]);
-				const areaBbox = area(bbox);
-				setArea(() => Math.round(areaBbox / 1e4));
-				const areaPerElement = areaBbox / counts;
+				const geojson = L.rectangle(props.bounds).toGeoJSON();
+				const areaBounds = area(geojson);
+				const areaPerElement = Math.round(areaBounds / counts);
+
+				// Calculate area for multiple class
+				const properties = [
+					{ value: 0, set: setNonSeagrass },
+					{ value: 1, set: setLowSeagrass },
+					{ value: 2, set: setMediumSeagrass },
+					{ value: 3, set: setHighSeagrass },
+				];
+				const areaClass = await Promise.all(properties.map(dict => calculateAreaTensor(tensor, dict.value, areaPerElement, dict.set)));
+				const totalArea = areaClass.reduce((x, y) => x + y);
+				setArea(totalArea);
+
+				// Enable classify and set loading false
+				props.setDisabledCalculate(false);
+				setButtonLabel('Calculate carbon');
 			}}>
-				Calculate Carbon
+				{ buttonLabel }
 			</button>
 		</div>
 	)
@@ -405,4 +447,17 @@ function disableButton(...args){
 	// Remove layer if change image
 	seagrassLayer ? Map.removeLayer(seagrassLayer) : null;
 	imageLayer ? Map.removeLayer(imageLayer) : null; 
+}
+
+/**
+ * Function to calculate area using tensor
+ * @param {tf.Tensor1D} tensor
+ * @param {Number} areaPerElement
+ * @param {Function} set
+ */
+async function calculateAreaTensor(tensor, value, areaPerElement, set){
+	let data = await tensor.equal(value).cast('int32').sum().array();
+	data = Math.round(data * areaPerElement / 10000);
+	set(data);
+	return data
 }
