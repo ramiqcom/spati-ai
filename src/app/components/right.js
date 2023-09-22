@@ -1,21 +1,18 @@
 "use client"
 
 // Import packages
-import Select from 'react-select';
 import { useState } from 'react';
 import { Map, Features } from './map';
 import shp from 'shpjs';
 import { kml } from '@tmcw/togeojson';
-import { simplify, area, toWgs84 } from '@turf/turf';
+import { area } from '@turf/turf';
 import parseGeoraster from 'georaster';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgpu';
-import { setSeagrassDisabled, setSeagrassLayer, setImageDisabled, setImageLayer, seagrassLayer, imageLayer } from './left';
+import { seagrassAgc } from './seagrass';
+import { setSeagrassDisabled, setSeagrassLayer, setImageDisabled, setImageLayer, seagrassLayer, imageLayer, creditData } from './left';
 import Table from './table';
-
-// Main geojson
-// let geojson = null;
-// export let setGeojson;
+import currency from 'currency.js';
 
 // Right
 export default function Right(){
@@ -27,7 +24,6 @@ export default function Right(){
 	const [ disabledCalculate, setDisabledCalculate ] = useState(true);
 	const [ disabledDownload, setDisabledDownload ] = useState(true);
 	const [ downloadLink, setDownloadLink ] = useState(null);
-	// [ geojson, setGeojson ] = useState(null);
 
 	// Datatable variable
 	const [ area, setArea ] = useState(null);
@@ -35,8 +31,14 @@ export default function Right(){
 	const [ lowSeagrass, setLowSeagrass ] = useState(null);
 	const [ mediumSeagrass, setMediumSeagrass ] = useState(null);
 	const [ highSeagrass, setHighSeagrass ] = useState(null);
-	const dataTable = { area, nonSeagrass, lowSeagrass, mediumSeagrass, highSeagrass };
-	const dataSet = { setArea, setNonSeagrass, setLowSeagrass, setMediumSeagrass, setHighSeagrass };
+	const [ lowSeagrassAgc, setLowSeagrassAgc ] = useState(null);
+	const [ mediumSeagrassAgc, setMediumSeagrassAgc ] = useState(null);
+	const [ highSeagrassAgc, setHighSeagrassAgc ] = useState(null);
+	const [ totalAgc, setTotalAgc ] = useState(null);
+	const [ carbonCreditUSD, setCarbonCreditUSD ] = useState(null);
+	const [ carbonCreditIDR, setCarbonCreditIDR ] = useState(null);
+	const dataTable = { area, nonSeagrass, lowSeagrass, mediumSeagrass, highSeagrass, lowSeagrassAgc, mediumSeagrassAgc, highSeagrassAgc, totalAgc, carbonCreditUSD, carbonCreditIDR };
+	const dataSet = { setArea, setNonSeagrass, setLowSeagrass, setMediumSeagrass, setHighSeagrass, setLowSeagrassAgc, setMediumSeagrassAgc, setHighSeagrassAgc, setTotalAgc, setCarbonCreditUSD, setCarbonCreditIDR };
 
 	return (
 		<div className='right panel flexible vertical padding bigspace'>
@@ -45,8 +47,8 @@ export default function Right(){
 			}
 			<UploadTiff style={{ marginTop: '5%' }} setDisabledClassify={ setDisabledClassify } setDisabledCalculate={ setDisabledCalculate } setFile={ setFile } file={ file } setImage={ setImage } />
 			<Classify disabled={ disabledClassify } setDisabledClassify={ setDisabledClassify } image={ image } setDisabledCalculate={ setDisabledCalculate } setDataTensor={ setDataTensor } setBounds={ setBounds } />
-			<Calculate disabled={ disabledCalculate } setDisabledCalculate={ setDisabledCalculate } dataSet={ dataSet } dataTensor={ dataTensor } image={ image } bounds={ bounds } />
-			<Table disabled={ disabledDownload } link={ downloadLink } dataTable={ dataTable } />
+			<Calculate disabled={ disabledCalculate } setDisabledCalculate={ setDisabledCalculate } dataSet={ dataSet } dataTensor={ dataTensor } bounds={ bounds } setDisabledDownload={setDisabledDownload} setDownloadLink={setDownloadLink}/>
+			<Table disabled={ disabledDownload } dataTable={ dataTable } link={downloadLink} />
 		</div>
 	)
 }
@@ -154,7 +156,7 @@ function Classify(props){
 				tensor = tensor.reshape([1, shape[0], shape[1], shape[2]]);
 
 				// Load model
-				const model = await tf.loadLayersModel('model/model_final/Seagrass_1695248109/model.json');
+				const model = await tf.loadLayersModel('model/model_final/Seagrass_1695400109/model.json');
 
 				// Predict!
 				let prediction = model.predict(tensor); // Predict the image
@@ -201,137 +203,6 @@ function Classify(props){
 	)
 }
 
-/*
-// AOI section 
-function AOI(props){
-	// AOI state
-	const [ aoiOption, setAoiOption ] = useState({ label: 'Draw AOI', value: 'draw' });
-
-	// Upload state
-	const [ uploadVis, setUploadVis ] = useState('hidden');
-
-	// Data format
-	const [ format, setFormat ] = useState('');
-
-	// AOI options
-  const aoiOptions = [
-    { label: 'Draw AOI', value: 'draw' },
-    { label: 'Shapefile (zip)', value: 'shp' },
-    { label: 'KML', value: 'kml' },
-    { label: 'GeoJSON', value: 'geojson' }
-  ];
-
-	// AOI format
-	const formats = {
-		shp: '.zip',
-		geojson: '.geojson,.json',
-		kml: '.kml,.kmz'
-	};
-
-	return (
-		<div className='flexible vertical spacely' style={{ marginTop: '5%' }}>
-			Select an AOI option
-
-			<div>
-				<Select
-					options={ aoiOptions }
-					defaultValue={ aoiOption }
-					onChange={ (option) => {
-						setAoiOption(option);
-						clear(props.setDisabledCalculate);
-
-						if (option.value == 'draw'){
-							setUploadVis('hidden');
-							Map.pm.controlsVisible() ? null : Map.pm.toggleControls();
-						} else {
-							Map.pm.controlsVisible() ? Map.pm.toggleControls() : null;
-							setUploadVis('visible');
-							setFormat(formats[option.value]);
-						};
-					} }
-				/>
-			</div>
-
-			<Upload style={{ visibility: uploadVis }} format={ format } option={ aoiOption.value } setDisabledCalculate={ props.setDisabledCalculate } />
-
-			<button className='greenbutton' onClick={() => {
-				Features.clearLayers();
-				props.setDisabledCalculate(true);
-			}}>
-				Remove AOI
-			</button>
-		</div>
-	)
-}
-
-// Upload section
-function Upload(props){
-	const [ file, setFile ] = useState(null);
-	const [ disabledShow, setDisabledShow ] = useState(true);
-
-	return (
-		<div style={ props.style } className='flexible vertical spacely'>
-			<input type="file" accept={ props.format } onChange={ (e) => {
-				setFile(e.target.files[0]);
-				setDisabledShow(false);
-			} } />
-
-			{
-				//<ShowGeometry disabled={ disabledShow } file={ file } format={ props.option } setDisabledCalculate={ props.setDisabledCalculate } />
-			}
-
-		</div>
-	)
-}
-*/
-
-/*
-// Button to show the uploaded geometry to map
-function ShowGeometry(props){
-	const converterFunction = {
-		shp: shpJson,
-		geojson: geojsonParse,
-		kml: kmlJson
-	};
-
-	return (
-		<div>
-			<button className='greenbutton' disabled={props.disabled} onClick={ async () => {
-				// Clear main features data
-				clear(props.setDisabledCalculate);
-				
-				// Convert any data to geojson
-				geojson = await converterFunction[props.format](props.file);
-
-				// Convert any projection to wgs84
-				geojson = area(geojson) < 0 ? toWgs84(geojson) : geojson;
-
-				// Simplify geometries and delete unecessary data
-				await geojson.features.map(x => x.properties = null);
-				geojson = await simplify(geojson, { tolerance: 0.001, mutate: true });
-			
-				// Set geojson as leaflet layers
-				const leafletGeojson = L.geoJSON(geojson);
-
-				// Add leaflet layers to the main Features
-				Features.addLayer(leafletGeojson);
-
-				// Get the center of geojson
-				const center = leafletGeojson.getBounds();
-				
-				// Move maps to geojson location
-				Map.fitBounds(center);
-
-				// Turn on calculate button
-				props.setDisabledCalculate(false);
-			}}>
-				Show Uploaded AOI
-			</button>
-		</div>
-	)
-}
-*/
-
 // Calculate carbon
 function Calculate(props){
 	const [ buttonLabel, setButtonLabel ] = useState('Calculate carbon');
@@ -342,9 +213,6 @@ function Calculate(props){
 				// Disable classify and set loading
 				props.setDisabledCalculate(true);
 				setButtonLabel('Loading...');
-
-				// Image
-				const image = props.image;
 				
 				// Tensor
 				let tensor = props.dataTensor;
@@ -352,7 +220,7 @@ function Calculate(props){
 				const counts = shape.reduce((x, y) => x * y);
 
 				// Data setter
-				const { setArea, setNonSeagrass, setLowSeagrass, setMediumSeagrass, setHighSeagrass } = props.dataSet;
+				const { setArea, setNonSeagrass, setLowSeagrass, setMediumSeagrass, setHighSeagrass, setLowSeagrassAgc, setMediumSeagrassAgc, setHighSeagrassAgc, setTotalAgc, setCarbonCreditUSD, setCarbonCreditIDR } = props.dataSet;
 
 				// Calculate area
 				const geojson = L.rectangle(props.bounds).toGeoJSON();
@@ -362,14 +230,54 @@ function Calculate(props){
 				// Calculate area for multiple class
 				const properties = [
 					{ value: 0, set: setNonSeagrass },
-					{ value: 1, set: setLowSeagrass },
-					{ value: 2, set: setMediumSeagrass },
-					{ value: 3, set: setHighSeagrass },
+					{ value: 1, set: setLowSeagrass, setAgc: setLowSeagrassAgc },
+					{ value: 2, set: setMediumSeagrass, setAgc: setMediumSeagrassAgc },
+					{ value: 3, set: setHighSeagrass, setAgc: setHighSeagrassAgc }
 				];
-				const areaClass = await Promise.all(properties.map(dict => calculateAreaTensor(tensor, dict.value, areaPerElement, dict.set)));
-				const totalArea = areaClass.reduce((x, y) => x + y);
+				const areaClass = await Promise.all(properties.map(dict => calculateAreaTensor(tensor, dict.value, areaPerElement, dict.set, dict.setAgc )));
+				const totalArea = areaClass.map(x => x.area).reduce((x, y) => x + y);
 				setArea(totalArea.toLocaleString('id-ID'));
 
+				// Calculate total agc
+				const totalAgc = areaClass.map(x => x.agc).reduce((x, y) => x + y);
+				setTotalAgc(totalAgc.toLocaleString('id-ID'));
+
+				// Currency data
+				const currencyResponse = await fetch('/currency');
+				const currencyData = await currencyResponse.text();
+
+				// Carbon data
+				const carbonResponse = await fetch('/carbon');
+				const carbonData = await carbonResponse.json();
+				
+				// Carbon price
+				const nbs = carbonData.filter(dict => dict.carboncreditscomlivecarbonprices == 'Nature Based Offset')[0].last;
+				const number = currency(nbs).value;
+				const carbonCreditUSD = totalAgc / 1_000_000 * number;
+				const carbonCreditIDR = carbonCreditUSD * currencyData;
+				setCarbonCreditUSD(Math.round(carbonCreditUSD).toLocaleString('id-ID'));
+				setCarbonCreditIDR(Math.round(carbonCreditIDR).toLocaleString('id-ID'));
+
+				// Set table download link
+				const columns = [ 'Variable', 'Value', 'Unit' ];
+				const table = [
+					[ 'Total AGC', totalAgc, 'gram' ],
+					[ 'Carbon credit (NBS)', carbonCreditUSD, 'USD' ],
+					[ 'Carbon credit (NBS)', carbonCreditIDR, 'IDR' ],
+					[ 'Area', totalArea, 'm^2' ],
+					[ 'Non-seagrass', areaClass[0].area, 'm^2' ],
+					[ 'Low-density seagrass', areaClass[1].area, 'm^2' ],
+					[ 'Medium-density seagrass', areaClass[2].area, 'm^2' ],
+					[ 'High-density seagrass', areaClass[3].agc, 'm^2' ],
+					[ 'Low-density AGC', areaClass[0].agc, 'gram' ],
+					[ 'Medium-density AGC', areaClass[1].agc, 'gram' ],
+					[ 'High-density AGC', areaClass[2].agc, 'gram' ],
+				];
+				props.setDownloadLink(csv(table, columns));
+
+				// Activate download button
+				props.setDisabledDownload(false);
+				
 				// Enable classify and set loading false
 				props.setDisabledCalculate(false);
 				setButtonLabel('Calculate carbon');
@@ -381,58 +289,8 @@ function Calculate(props){
 }
 
 /**
- * Convert SHP to GeoJSON
- * @param {Blob} file - ArrayBuffer
- * @returns {GeoJSON} - GeoJSON
- */
-async function shpJson(file){
-  return shp(await file.arrayBuffer());
-}
-
-/**
- * Convert KML to GeoJSON
- * @param {Blob} file - ArrayBuffer
- * @returns {GeoJSON} - GeoJSON
- */
-async function kmlJson(file){
-  const text = await file.text();
-  const parsed = new DOMParser().parseFromString(text, 'application/xml');
-  return kml(parsed);
-}
-
-/**
- * Parse GeoJSON
- * @param {Blob} file - ArrayBuffer
- * @returns {GeoJSON} - GeoJSON
- */
-async function geojsonParse(file){
-  const text = await file.text();
-  return JSON.parse(text);
-}
-
-// Function to clear data
-function clear(setDisabledCalculate){
-	// setGeojson(null);
-	Features.clearLayers();
-	setDisabledCalculate(true);
-}
-
-/**
- * Function to make array to csv url
- * @param {Array.<Array.<String|Number>>} data - Arrays of array that compose a table 
- * @param {Array.<String>} columns - Column of the table
- * @returns {String} - URI of the CSV
- */
-function csv(data, columns){
-	const array = Array.from(data);
-	array.unshift(columns);
-	const string = data.map(row => row.join(',')).join('\n');
-	const url =  encodeURI('data:text/csv;charset=utf-8,' + string);
-	return url;
-}
-
-/**
  * Disable many button
+ * @param {Function} args
  */
 function disableButton(...args){
 	// Nonactive feature
@@ -455,9 +313,31 @@ function disableButton(...args){
  * @param {Number} areaPerElement
  * @param {Function} set
  */
-async function calculateAreaTensor(tensor, value, areaPerElement, set){
-	let data = await tensor.equal(value).cast('int32').sum().array();
-	data = Math.round(data * areaPerElement);
-	set(data.toLocaleString('id-ID'));
-	return data
+async function calculateAreaTensor(tensor, value, areaPerElement, set, setAgc){
+	// Calculate area
+	let area = await tensor.equal(value).cast('int32').sum().array();
+	area = Math.round(area * areaPerElement);
+	set(area.toLocaleString('id-ID'));
+	
+	// Calculate agc
+	let agc = seagrassAgc[value];
+	agc = Math.round(area * agc);
+	setAgc ? setAgc(agc.toLocaleString('id-ID')) : null;
+
+	// Return all object
+	return { area, agc };
+}
+
+/**
+ * Function to make array to csv url
+ * @param {Array.<Array.<String|Number>>} data - Arrays of array that compose a table 
+ * @param {Array.<String>} columns - Column of the table
+ * @returns {String} - URI of the CSV
+ */
+function csv(data, columns){
+	const array = Array.from(data);
+	array.unshift(columns);
+	const string = data.map(row => row.join(',')).join('\n');
+	const url =  encodeURI('data:text/csv;charset=utf-8,' + string);
+	return url;
 }

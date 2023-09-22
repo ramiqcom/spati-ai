@@ -57,7 +57,7 @@
 }
 
 .main {
-  flex: 50;
+  flex: 40;
 }
 
 #map {
@@ -97,7 +97,7 @@
 }
 
 .bigspace {
-  gap: 30px;
+  gap: 20px;
 }
 
 .smallspace {
@@ -105,10 +105,12 @@
 }
 
 .layer {
-  padding: 4%;
-  margin-top: 5%;
-  background-color: #215478;
   border-radius: 1vh;
+}
+
+.blue {
+  background-color: #215478;
+  padding: 4%;
 }
 
 .legend {

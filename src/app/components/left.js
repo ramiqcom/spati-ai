@@ -2,9 +2,11 @@
 
 // Import packages
 import { useState } from "react";
-import { seagrassPalette, seagrassLabel } from "./seagrass";
+import { seagrassPalette, seagrassLabel, seagrassAgc } from "./seagrass";
 import Image from 'next/image';
 import logo from '../../../public/logo.png';
+import { Grid } from 'gridjs-react';
+import { html } from 'gridjs';
 
 // State disable check seagrass layer
 let imageDisabled;
@@ -27,16 +29,18 @@ export default function Left(){
 	return (
 		<div className='left panel flexible vertical padding smallspace'>
 
-			<div className="flexible padding smallspace center2" style={{ marginTop: '10%' }}>
+			<div className="flexible padding smallspace center2" style={{ marginTop: '5%' }}>
 				<Image 
 					src={logo}
 					alt="SPATI.AI" 
-					height={100} 
+					height={50} 
 				/>
 			</div>
 
 			<ImageLayer />
 			<Seagrass />
+			<AGCInfo />
+			<CarbonCredit />
 		</div>
 	)
 }
@@ -48,7 +52,7 @@ function ImageLayer(){
 	[ imageLayer, setImageLayer ] = useState(null); 
 
 	return (
-		<div className="flexible layer horizontal smallspace" style={{ color: 'white' }}>
+		<div className="flexible layer horizontal smallspace blue" style={{ color: 'white' }}>
 			<input type="checkbox" checked={check} disabled={imageDisabled} onChange={e => {
 					const status = e.target.checked;
 					setCheck(status);
@@ -65,13 +69,13 @@ function Seagrass(){
 	[ seagrassLayer, setSeagrassLayer ] = useState(null); 
 
 	return (
-		<div className="flexible layer vertical smallspace">
+		<div className="flexible layer vertical smallspace blue">
 			<div style={{ color: 'white' }}>
 				<input type="checkbox" checked={check} disabled={seagrassDisabled} onChange={e => {
 					const status = e.target.checked;
 					setCheck(status);
 					status ? seagrassLayer.setOpacity(1) : seagrassLayer.setOpacity(0);
-				}}/>Seagrass
+				}}/>Seagrass percent cover
 			</div>
 
 			<SeagrassLegend />
@@ -93,4 +97,58 @@ function SeagrassLegend(){
 			}) }
 		</div>
 	);
+}
+
+// AGC based on percent cover
+function AGCInfo(){
+	return (
+		<div className="flexible layer vertical smallspace blue" style={{ color: 'white' }}>
+			Seagrass AGC (Above Ground Carbon Stock)
+			{ seagrassLabel.map((label, index) => {
+				return (
+					<div className="flexible horizontal smallspace" key={index}>
+						<div style={{ flex: 5, fontSize: '12px' }}> { `${label}: ` } </div>
+						<div style={{ flex: 1, fontSize: '12px' }}> { seagrassAgc[index] } </div>
+						<div style={{ flex: 1, fontSize: '12px' }}> { 'gram/\u33A1' } </div>
+					</div>
+				);
+			}) }
+			<a href="https://isprs-archives.copernicus.org/articles/XLVI-4-W6-2021/321/2021/" target="_blank" style={{ color: 'white' }}>
+				Source
+			</a>
+		</div>
+	);
+}
+
+// Carbon credit
+function CarbonCredit(){
+	const tableProp = {
+		style: { container: { fontSize: 'small' } },
+		height: '30vh',
+		fixedHeader: true,
+		resizable: true,
+		autoWidth: true
+	};
+	const columns = [
+		{ name: html(
+      "<a href='https://carboncredits.com/carbon-prices-today/' target='_blank' style={{ textJustify: 'center' }}> Market </a>"
+    ), id: 'carboncreditscomlivecarbonprices' }, 
+		{ name: 'Last (per Ton)', id: 'last' }, 
+		{ name: 'Change', id: 'change' }, 
+		{ name: 'YTD', id: 'ytd' }
+	];
+
+	return (
+		<div className="flexible layer vertical smallspace">
+			<Grid
+				{ ...tableProp }
+				columns={columns}
+				data={ async () => {
+					const response = await fetch('/carbon');
+					const json = await response.json();
+					return json;
+				}}
+			/>
+		</div>
+	)
 }

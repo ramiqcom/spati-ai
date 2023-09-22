@@ -6,21 +6,27 @@ export default function Table(props){
 	// Table property
 	const tableProp = {
 		style: { container: { fontSize: 'small' } },
-		height: '45vh',
+		height: '55vh',
 		fixedHeader: true,
 		resizable: true,
 		autoWidth: true
-	}	
+	};
 
 	// Table
-	const data = props.dataTable;
+	const { area, nonSeagrass, lowSeagrass, mediumSeagrass, highSeagrass, lowSeagrassAgc, mediumSeagrassAgc, highSeagrassAgc, totalAgc, carbonCreditUSD, carbonCreditIDR } = props.dataTable;
 	const columns = [ 'Variable', 'Value', 'Unit' ];
 	const dataTable = [
-		[ 'Area', data.area, '\u33A1' ],
-		[ 'Non-seagrass', data.nonSeagrass, '\u33A1' ],
-		[ 'Low-density seagrass', data.lowSeagrass, '\u33A1' ],
-		[ 'Medium-density seagrass', data.mediumSeagrass, '\u33A1' ],
-		[ 'High-density seagrass', data.highSeagrass, '\u33A1' ],
+		[ 'Total AGC', totalAgc, 'gram' ],
+		[ 'Carbon credit (NBS)', carbonCreditUSD, 'USD' ],
+		[ 'Carbon credit (NBS)', carbonCreditIDR, 'IDR' ],
+		[ 'Area', area, 'm^2' ],
+		[ 'Non-seagrass', nonSeagrass, 'm^2' ],
+		[ 'Low-density seagrass', lowSeagrass, 'm^2' ],
+		[ 'Medium-density seagrass', mediumSeagrass, 'm^2' ],
+		[ 'High-density seagrass', highSeagrass, 'm^2' ],
+		[ 'Low-density AGC', lowSeagrassAgc, 'gram' ],
+		[ 'Medium-density AGC', mediumSeagrassAgc, 'gram' ],
+		[ 'High-density AGC', highSeagrassAgc, 'gram' ],
 	];
 
 	return (
