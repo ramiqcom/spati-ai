@@ -16,11 +16,11 @@ export default function Table(props){
 	const data = props.dataTable;
 	const columns = [ 'Variable', 'Value', 'Unit' ];
 	const dataTable = [
-		[ 'Area', data.area, 'Ha' ],
-		[ 'Non-seagrass', data.nonSeagrass, 'Ha' ],
-		[ 'Low-density seagrass', data.lowSeagrass, 'Ha' ],
-		[ 'Medium-density seagrass', data.mediumSeagrass, 'Ha' ],
-		[ 'High-density seagrass', data.highSeagrass, 'Ha' ],
+		[ 'Area', data.area, '\u33A1' ],
+		[ 'Non-seagrass', data.nonSeagrass, '\u33A1' ],
+		[ 'Low-density seagrass', data.lowSeagrass, '\u33A1' ],
+		[ 'Medium-density seagrass', data.mediumSeagrass, '\u33A1' ],
+		[ 'High-density seagrass', data.highSeagrass, '\u33A1' ],
 	];
 
 	return (

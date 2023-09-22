@@ -368,7 +368,7 @@ function Calculate(props){
 				];
 				const areaClass = await Promise.all(properties.map(dict => calculateAreaTensor(tensor, dict.value, areaPerElement, dict.set)));
 				const totalArea = areaClass.reduce((x, y) => x + y);
-				setArea(totalArea);
+				setArea(totalArea.toLocaleString('id-ID'));
 
 				// Enable classify and set loading false
 				props.setDisabledCalculate(false);
@@ -457,7 +457,7 @@ function disableButton(...args){
  */
 async function calculateAreaTensor(tensor, value, areaPerElement, set){
 	let data = await tensor.equal(value).cast('int32').sum().array();
-	data = Math.round(data * areaPerElement / 10000);
-	set(data);
+	data = Math.round(data * areaPerElement);
+	set(data.toLocaleString('id-ID'));
 	return data
 }
