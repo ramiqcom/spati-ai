@@ -1,8 +1,7 @@
 import puppeteer from "puppeteer";
 export async function GET(){
 	const browser = await puppeteer.launch({
-    headless: false,
-    defaultViewport: null,
+    headless: true,
   });
 
 	const page = await browser.newPage();
