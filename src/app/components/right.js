@@ -3,8 +3,6 @@
 // Import packages
 import { useState } from 'react';
 import { Map, Features } from './map';
-import shp from 'shpjs';
-import { kml } from '@tmcw/togeojson';
 import { area } from '@turf/turf';
 import parseGeoraster from 'georaster';
 import * as tf from '@tensorflow/tfjs';
@@ -244,7 +242,7 @@ function Calculate(props){
 
 				// Currency data
 				const currencyResponse = await fetch('/currency');
-				const currencyData = await currencyResponse.text();
+				const currencyData = currency(await currencyResponse.text()).value;
 
 				// Carbon data
 				const carbonResponse = await fetch('/carbon');
