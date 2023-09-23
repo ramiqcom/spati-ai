@@ -242,7 +242,7 @@ function Calculate(props){
 
 				// Currency data
 				const currencyResponse = await fetch('/currency');
-				const currencyData = currency(await currencyResponse.text()).value;
+				const currencyData = await currencyResponse.text();
 
 				// Carbon data
 				const carbonResponse = await fetch('/carbon');
