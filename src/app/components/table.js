@@ -19,8 +19,8 @@ export default function Table(props){
 	const columns = [ 'Variable', 'Value', 'Unit' ];
 	const dataTable = [
 		[ 'Total AGC', totalAgc, 'gram' ],
-		[ 'Carbon credit (NBS)', carbonCreditUSD, 'USD' ],
-		[ 'Carbon credit (NBS)', carbonCreditIDR, 'IDR' ],
+		[ 'Carbon credit (Nature Based Offset)', carbonCreditUSD, 'USD' ],
+		[ 'Carbon credit (Nature Based Offset)', carbonCreditIDR, 'IDR' ],
 		[ 'Area', area, 'm^2' ],
 		[ 'Non-seagrass', nonSeagrass, 'm^2' ],
 		[ 'Low-density seagrass', lowSeagrass, 'm^2' ],
