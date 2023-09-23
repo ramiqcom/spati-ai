@@ -2,13 +2,13 @@
 
 // Import packages
 import { useState } from 'react';
-import { Map, Features } from './map';
+import { Map } from './map';
 import { area } from '@turf/turf';
 import parseGeoraster from 'georaster';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgpu';
 import { seagrassAgc } from './seagrass';
-import { setSeagrassDisabled, setSeagrassLayer, setImageDisabled, setImageLayer, seagrassLayer, imageLayer, creditData } from './left';
+import { setSeagrassDisabled, setSeagrassLayer, setImageDisabled, setImageLayer, seagrassLayer, imageLayer } from './left';
 import Table from './table';
 import currency from 'currency.js';
 
@@ -40,12 +40,9 @@ export default function Right(){
 
 	return (
 		<div className='right panel flexible vertical padding bigspace'>
-			{
-				//<AOI setDisabledCalculate={ setDisabledCalculate } />
-			}
 			<UploadTiff style={{ marginTop: '5%' }} setDisabledClassify={ setDisabledClassify } setDisabledCalculate={ setDisabledCalculate } setFile={ setFile } file={ file } setImage={ setImage } />
 			<Classify disabled={ disabledClassify } setDisabledClassify={ setDisabledClassify } image={ image } setDisabledCalculate={ setDisabledCalculate } setDataTensor={ setDataTensor } setBounds={ setBounds } />
-			<Calculate disabled={ disabledCalculate } setDisabledCalculate={ setDisabledCalculate } dataSet={ dataSet } dataTensor={ dataTensor } bounds={ bounds } setDisabledDownload={setDisabledDownload} setDownloadLink={setDownloadLink}/>
+			<Calculate disabled={ disabledCalculate } setDisabledCalculate={ setDisabledCalculate } dataSet={ dataSet } dataTensor={ dataTensor } bounds={ bounds } setDisabledDownload={setDisabledDownload} setDownloadLink={setDownloadLink} />
 			<Table disabled={ disabledDownload } dataTable={ dataTable } link={downloadLink} />
 		</div>
 	)

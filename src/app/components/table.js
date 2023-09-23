@@ -1,3 +1,5 @@
+'use client'
+
 // Important packages
 import { Grid } from 'gridjs-react';
 

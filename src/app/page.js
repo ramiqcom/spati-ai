@@ -1,3 +1,5 @@
+'use client'
+
 // Import packages
 import Left from './components/left';
 import Canvas from './components/canvas';
