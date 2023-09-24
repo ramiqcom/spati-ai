@@ -3,7 +3,6 @@
 const nextConfig = {
 	experimental: {
     serverActions: true,
-    serverComponentsExternalPackages: ['bcrypt']
   },
   output: 'standalone'
 }
