@@ -6,7 +6,6 @@ import { Map } from './map';
 import { area } from '@turf/turf';
 import parseGeoraster from 'georaster';
 import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-webgpu';
 import { seagrassAgc } from './seagrass';
 import { setSeagrassDisabled, setSeagrassLayer, setImageDisabled, setImageLayer, seagrassLayer, imageLayer } from './left';
 import Table from './table';
@@ -94,10 +93,6 @@ function ShowImage(props){
 				const data = await parseGeoraster(props.file);
 				props.setImage(data);
 
-				// Load GeoRasterLayer
-				let GeoRasterLayer = await import('georaster-layer-for-leaflet');
-				GeoRasterLayer = GeoRasterLayer.default;
-
 				// TIFF layer
 				const layer = new GeoRasterLayer({
           georaster: data,
@@ -141,9 +136,6 @@ function Classify(props){
 				// Get image information
 				const image = props.image;
 				const { noDataValue, pixelHeight, pixelWidth, projection, xmin, xmax, ymax, ymin, values } = await image;
-			
-				// Set process to webgpu
-				await tf.setBackend('webgpu');
 				
 				// Preprocess tensor for prediction
 				let tensor = tf.tensor(values).div(255).transpose();
