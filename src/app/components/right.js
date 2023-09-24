@@ -141,7 +141,7 @@ function Classify(props){
 				// Get image information
 				const image = props.image;
 				const { noDataValue, pixelHeight, pixelWidth, projection, xmin, xmax, ymax, ymin, values } = await image;
-
+			
 				// Set process to webgpu
 				await tf.setBackend('webgpu');
 				
@@ -151,7 +151,7 @@ function Classify(props){
 				tensor = tensor.reshape([1, shape[0], shape[1], shape[2]]);
 
 				// Load model
-				const model = await tf.loadLayersModel('model/model_final/Seagrass_1695400109/model.json');
+				const model = await tf.loadLayersModel('model/Seagrass_1695564771/model.json');
 
 				// Predict!
 				let prediction = model.predict(tensor); // Predict the image
