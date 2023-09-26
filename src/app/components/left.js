@@ -3,8 +3,6 @@
 // Import packages
 import { useState } from "react";
 import { seagrassPalette, seagrassLabel, seagrassAgc } from "./seagrass";
-import Image from 'next/image';
-import logo from '../../../public/logo.png';
 import { Grid } from 'gridjs-react';
 import { html } from 'gridjs';
 
@@ -28,15 +26,6 @@ export let setSeagrassLayer;
 export default function Left(){
 	return (
 		<div className='left panel flexible vertical padding smallspace'>
-
-			<div className="flexible padding smallspace center2" style={{ marginTop: '5%' }}>
-				<Image 
-					src={logo}
-					alt="SPATI.AI" 
-					height={50} 
-				/>
-			</div>
-
 			<ImageLayer />
 			<Seagrass />
 			<AGCInfo />
@@ -52,7 +41,7 @@ function ImageLayer(){
 	[ imageLayer, setImageLayer ] = useState(null); 
 
 	return (
-		<div className="flexible layer horizontal smallspace blue" style={{ color: 'white' }}>
+		<div className="flexible layer horizontal smallspace blue" style={{ color: 'white', marginTop: '5%' }}>
 			<input type="checkbox" checked={check} disabled={imageDisabled} onChange={e => {
 					const status = e.target.checked;
 					setCheck(status);
@@ -124,7 +113,7 @@ function AGCInfo(){
 function CarbonCredit(){
 	const tableProp = {
 		style: { container: { fontSize: 'small' } },
-		height: '30vh',
+		height: '40vh',
 		fixedHeader: true,
 		resizable: true,
 		autoWidth: true
