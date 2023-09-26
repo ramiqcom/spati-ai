@@ -114,9 +114,9 @@ function CarbonCredit(){
 	const tableProp = {
 		style: { container: { fontSize: 'small' } },
 		height: '40vh',
+		width: '100%',
 		fixedHeader: true,
 		resizable: true,
-		autoWidth: true
 	};
 	const columns = [
 		{ name: html(

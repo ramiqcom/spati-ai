@@ -11,7 +11,7 @@ export default function Table(props){
 		height: '55vh',
 		fixedHeader: true,
 		resizable: true,
-		autoWidth: true
+		width: '100%',
 	};
 
 	// Table
