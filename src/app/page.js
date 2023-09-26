@@ -6,6 +6,7 @@ import Canvas from './components/canvas';
 import Right from './components/right';
 import Image from 'next/image';
 import logo from '../../public/logo.png';
+import { useRef } from 'react';
 
 // Main application export
 export default function Home() {  
@@ -35,11 +36,14 @@ function Header(){
 
 // Main
 function Main(){
+  const dialogRef = useRef();
+
   return (
     <div className='flexible horizontal main'>
+        <dialog ref={dialogRef} onClick={(e) => dialogRef.current.close() }/>
         <Left />
         <Canvas />
-        <Right />
+        <Right dialog={dialogRef} />
     </div>
   )
 }

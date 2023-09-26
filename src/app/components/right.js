@@ -12,7 +12,7 @@ import Table from './table';
 import currency from 'currency.js';
 
 // Right
-export default function Right(){
+export default function Right(props){
 	const [ file, setFile ] = useState(null);
 	const [ image, setImage ] = useState(null);
 	const [ bounds, setBounds ] = useState(null);
@@ -39,7 +39,7 @@ export default function Right(){
 
 	return (
 		<div className='right panel flexible vertical padding bigspace'>
-			<UploadTiff style={{ marginTop: '5%' }} setDisabledClassify={ setDisabledClassify } setDisabledCalculate={ setDisabledCalculate } setFile={ setFile } file={ file } setImage={ setImage } />
+			<UploadTiff style={{ marginTop: '5%' }} setDisabledClassify={ setDisabledClassify } setDisabledCalculate={ setDisabledCalculate } setFile={ setFile } file={ file } setImage={ setImage } dialog={ props.dialog } />
 			<Classify disabled={ disabledClassify } setDisabledClassify={ setDisabledClassify } image={ image } setDisabledCalculate={ setDisabledCalculate } setDataTensor={ setDataTensor } setBounds={ setBounds } />
 			<Calculate disabled={ disabledCalculate } setDisabledCalculate={ setDisabledCalculate } dataSet={ dataSet } dataTensor={ dataTensor } bounds={ bounds } setDisabledDownload={setDisabledDownload} setDownloadLink={setDownloadLink} />
 			<Table disabled={ disabledDownload } dataTable={ dataTable } link={downloadLink} />
@@ -59,8 +59,19 @@ function UploadTiff(props){
 			</div>
 
 			<input type="file" accept={'.tiff,.tif'} onChange={ (e) => {
-				props.setFile(e.target.files[0]);
-				setDisabledShow(false);
+				const file = e.target.files[0];
+				props.setFile(file);
+
+				if (file.size > 10e6) {
+					const errorMsg = 'File size too big!\nOnly accept file under 10mb!'; 
+					const dialog = props.dialog.current;
+					dialog.innerText = errorMsg;
+					dialog.showModal();
+					throw new Error(errorMsg);
+				} else {
+					setDisabledShow(false);
+				};
+
 			} } />
 
 			<ShowImage 
