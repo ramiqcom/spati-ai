@@ -25,7 +25,7 @@ function Header(){
       <Image 
 					src={logo}
 					alt="SPATI.AI" 
-					height={30}
+					height={20}
           style={{ borderRadius: '50%', border: '0.5px solid white' }}
 				/>
       <div className='title'> SPATI.AI </div>

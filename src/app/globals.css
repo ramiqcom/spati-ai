@@ -163,3 +163,12 @@ dialog {
   font-weight: 700;
   border-radius: 5%;
 }
+
+.resize {
+  border: 1px solid black; 
+  overflow:auto;
+}
+
+.resize.horizontal {
+  resize: horizontal;
+}

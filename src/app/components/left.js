@@ -113,7 +113,7 @@ function AGCInfo(){
 function CarbonCredit(){
 	const tableProp = {
 		style: { container: { fontSize: 'small' } },
-		height: '40vh',
+		height: '35vh',
 		width: '100%',
 		fixedHeader: true,
 		resizable: true,
@@ -122,9 +122,7 @@ function CarbonCredit(){
 		{ name: html(
       "<a href='https://carboncredits.com/carbon-prices-today/' target='_blank' style={{ textJustify: 'center' }}> Market </a>"
     ), id: 'carboncreditscomlivecarbonprices' }, 
-		{ name: 'Last (per Ton)', id: 'last' }, 
-		{ name: 'Change', id: 'change' }, 
-		{ name: 'YTD', id: 'ytd' }
+		{ name: 'Price (per Ton)', id: 'last' }, 
 	];
 
 	return (
